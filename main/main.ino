@@ -15,44 +15,55 @@ NfcAdapter nfc(pn532hsu);
 class NfcReader
 {
   private:
-    int _delay;
+    int uxDelay;
+    
   public:
-    NfcReader(int delayValue)
+    NfcReader(int uxDelayNewValue)
     {
-      this->_delay = delayValue;
+      this->uxDelay = uxDelayNewValue;
       nfc.begin();
     }
     
-    void setDelay(int delayValue)
+    void vSetDelay(int uxDelayValue)
     {
-      this->_delay = delayValue;
+      this->uxDelay = uxDelayValue;
     }
-    
-    void readNfc()
+
+    void vReadNfc()
     {
       if (nfc.tagPresent())
       {
-          NfcTag tag = nfc.read();
-          tag.print();
+          NfcTag pvTag = nfc.read();
+          pvTag.print();
       }
-      delay(this->_delay);
+      delay(this->uxDelay);
     }
 };
 
 /********************************** Main *******************************************/
 
 NfcReader reader = NfcReader(NFC_READ_DELAY);
+
+void vTaskReadNfc(void *pvParameters)
+{
+  for(;;)
+  {
+    reader.vReadNfc();
+  }
+}
+
 void setup() 
 {
     Serial.begin(115200);
     while(!Serial);
     Serial.println("--IoT--");
+
+    // JOB 1 : Starts NFC Reading.
+    xTaskCreate(vTaskReadNfc, "vTaskReadNfc", 1000, NULL, 5, NULL);
 }
 
 void loop() 
 {
-  //todo : mettre ça dans un job (lecture NFC).
-  reader.readNfc();
 
   //todo : connexion wifi. Dans un JOB
   //todo : si un badge est lu -> vérifier s'il correspond à un badge en BD. -> si oui, activer le PIR. PIR dans un JOB.
