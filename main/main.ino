@@ -10,7 +10,7 @@
 /* global vars */
 PN532_HSU pn532hsu(Serial1);
 NfcAdapter nfc(pn532hsu);
-WiFiServer server(8080); // Server on port 80. See https://randomnerdtutorials.com/esp32-web-server-arduino-ide/ for more details.
+WiFiServer server(8080); // Server on port 8080. See https://randomnerdtutorials.com/esp32-web-server-arduino-ide/ for more details.
 const long timeoutTime = 3000; // ms
 
 // Change the wifi credentials here
