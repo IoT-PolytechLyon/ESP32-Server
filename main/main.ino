@@ -1,5 +1,5 @@
 /* NB : 
- * - WIFI credentials are located in the Server.h file.
+ * - WIFI credentials are located in the HttpServer.h file. Same goes for the NodeExpress server IP.
  * - NFC Reader must be plugged into UART port
  * - ...
  * - ...
@@ -9,15 +9,23 @@
 #include "Arduino.h"
 #include "NfcReader.h"
 #include "HttpServer.h"
+#include "ObjectData.h"
 
 /* consts */
 #define NFC_READ_DELAY          1000   // ms
 #define NFC_READ_DELAY_OK       3000   // ms
 #define SERVER_TIMEOUT_TIME     3000   // ms
 
+/* global vars */
+WiFiServer server(8080); // Server on port 8080. See https://randomnerdtutorials.com/esp32-web-server-arduino-ide/ for more details.
+HttpServer* httpServer = new HttpServer(SERVER_TIMEOUT_TIME);
 boolean nfcPassed = false;
 
 /********************************** NFC Task *******************************************/
+// Reads the NFC each NFC_READ_DELAY ms. If a NFC badge is recognized, it enables the PIR and waits for NFC_READ_DELAY_OK ms. 
+// It then saves the current state on nodeExpress server side.
+
+// If a NFC badge is recognized once again, it will shut down the LEDs & PIR and will save the new state on nodeExpress server side.
 void vTaskReadNfc(void* pvParameters)
 {
   NfcReader* reader = new NfcReader();
@@ -29,33 +37,40 @@ void vTaskReadNfc(void* pvParameters)
     String nfcTag = reader->vReadNfc(nfc);
     if(nfcTag != "")
     {
+      Serial.println(nfcTag);
       if(!nfcPassed)
       {
         //todo : PERFORM GET to node express server.
         //checkNfc with database. If NFC ok -> nfcPassed = true.
+        // POST to nodeExpress the new state.
         nfcPassed = true;
         delay(NFC_READ_DELAY_OK); // avoids "double badging"
       }
-
+      else if(nfcPassed)
+      {
+        
+      }
     }
     delay(NFC_READ_DELAY);
   }
 }
 /********************************** PIR Task *******************************************/
+// The PIR task, enabled once a correct nfc badge was read by the program.
+// when the PIR detects a movement, 
 void vTaskPirHandler(void* pvParameters)
 {
-  if(
   for(;;)
   {
-    
+    if(nfcPassed)
+    {
+      
+    }
   }
 }
 /********************************** Server Task ***************************************/
+// Task that listens on port 8080 and that proceeds clients http requests.
 void vTaskListenToIncomingConnections(void* pvParameters)
 {
-  WiFiServer server(8080); // Server on port 8080. See https://randomnerdtutorials.com/esp32-web-server-arduino-ide/ for more details.
-  HttpServer* httpServer = new HttpServer(SERVER_TIMEOUT_TIME);
-  httpServer->vConnectToWiFi(); // connects to WiFi
   server.begin(); // starts the server
   for(;;)
   {
@@ -66,10 +81,15 @@ void vTaskListenToIncomingConnections(void* pvParameters)
 /********************************** Main *********************************************/
 void setup() 
 {
+  
   Serial.begin(115200);
   while(!Serial);
-  
   Serial.println("--IoT--\n");
+  
+  httpServer->vConnectToWiFi();
+  httpServer->vInitializeObjectData();
+  
+  
   pinMode(LED_BUILTIN, OUTPUT);
  
   // JOB 1 : Starts NFC Reading.

@@ -5,6 +5,19 @@ HttpServer::HttpServer(int timeoutTime)
   this->_timeoutTime = timeoutTime;
 }
 
+void HttpServer::vInitializeObjectData()
+{
+  // get data on server. If exists, initialize Object Data from json.
+  // ELse, create new default instance and post it to server.
+  this->_objectData = this->getStateFromNodeExpressServer();
+}
+
+ObjectData* HttpServer::getObjectState()
+{
+  return this->_objectData;
+}
+
+
 void HttpServer::vConnectToWiFi()
 {
   WiFi.begin(this->_ssid, this->_password);
@@ -42,7 +55,7 @@ void HttpServer::vListenToIncomingConnections(WiFiServer& server)
       }
     }
     // everything is read. We proceed to the request and we respond.
-    client.println(this->handleEndpoints(httpRequest));
+    client.println(this->dispatcher(httpRequest));
     client.println();
     client.println();
     client.stop();
@@ -50,7 +63,7 @@ void HttpServer::vListenToIncomingConnections(WiFiServer& server)
 }
 
 // MODIFY THIS METHOD TO ADD NEW ENDPOINTS
-String HttpServer::handleEndpoints(String httpRequest)
+String HttpServer::dispatcher(String httpRequest)
 {
   /********************** GET /built-in/on **********************/
   // this endpoint is for testing purposes. It turns the built-in led on.
@@ -75,8 +88,12 @@ String HttpServer::handleEndpoints(String httpRequest)
     Serial.println("POST /led");
     //Serial.println(httpRequest);
     String httpBody = HttpServer::getHttpBodyFromHttpRequest(httpRequest);
-    //todo : retrieve the body, parse int, and proceed if valid.
-    return this->get200() + "{ \"data\": {\"success\": \"POST /led is available but the endpoint does nothing for now.\"} }";
+    StaticJsonDocument<256> doc;
+    deserializeJson(doc, httpBody);
+    this->_objectData->getLedState()->vSetRed(doc[0]["state"]["led_state"]["red_value"]);
+    this->_objectData->getLedState()->vSetGreen(doc[0]["state"]["led_state"]["green_value"]);
+    this->_objectData->getLedState()->vSetBlue(doc[0]["state"]["led_state"]["blue_value"]);
+    return this->get200() + "{ \"data\": {\"success\": \"Data were successfuly saved on esp32 side.\"} }";
   }
   /********************** 404 **********************/
   else
@@ -99,4 +116,36 @@ String HttpServer::getHttpBodyFromHttpRequest(String httpRequest)
 {
   // returns everything that is located between the end of the header and the end of the request (i.e. the request body).
   return httpRequest.substring(httpRequest.indexOf("\r\n\r\n"), httpRequest.length());
+}
+
+void HttpServer::vPostStateToNodeExpressServer()
+{
+  //todo
+}
+
+ObjectData* HttpServer::getStateFromNodeExpressServer()
+{
+  ObjectData* objectData;
+  HTTPClient http;
+  String url = "http://" + this->_nodeExpressServerIP + ":" + this->_nodeExpressServerPort + "/connected-devices/by-name/esp32-IoT-2a";
+  http.begin(url.c_str());
+  if(http.GET() == 200)
+  {
+    String body = http.getString();
+    Serial.println("actual server state :");
+    Serial.println(body);
+    objectData = new ObjectData(body);
+
+  }
+  else
+  {
+    // we consider that an initial state is already created on serverSide for now. Otherwise, it would require us to :
+    // create an ObjectData -> convert it into json -> POST the json onto the server -> GET the created ressource in order to get the created id -> update the id of the objectData.
+    // This is useful when the ESP32 is started for the first time and that there's no data on server side. Otherwise for now and for testing purposes,
+    // it's quite useless, but this is a feature that needs to be implemented so that each use case is handled by the program.
+
+    // so for now, do nothing here.
+  }
+  http.end();
+  return objectData;
 }
