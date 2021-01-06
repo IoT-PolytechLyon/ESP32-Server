@@ -5,24 +5,12 @@ NFC_State::NFC_State()
   this->_isActivated = false;
 }
 
-void NFC_State::vSwitchState()
-{ 
-  if(this->_isActivated)
-  {
-    this->_isActivated = false;
-  }
-  else
-  {
-    this->_isActivated = true;
-  }
-}
-
-void NFC_State::vSetState(boolean activated)
+void NFC_State::vSetBadgeActivated(boolean activated)
 {
   this->_isActivated = activated;
 }
 
-boolean NFC_State::getState()
+boolean NFC_State::isBadgeActivated()
 {
   return this->_isActivated;
 }

@@ -33,8 +33,9 @@ class HttpServer
     void vConnectToWiFi();                                               // 4
     void vListenToIncomingConnections(WiFiServer& server);               // 5
     static String getHttpBodyFromHttpRequest(String httpRequest);        // 9
-    void vPostStateToNodeExpressServer();                                // 10
+    void vPutStateToNodeExpressServer();                                 // 10
     ObjectData* getStateFromNodeExpressServer();                         // 11
+    boolean isBadgeAuthorized(String badge);                             // 12
 };
 
 

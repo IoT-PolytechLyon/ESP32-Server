@@ -10,9 +10,8 @@ class NFC_State
      
   public:
     NFC_State();
-    void vSwitchState();
-    void vSetState(boolean activated);
-    boolean getState();
+    void vSetBadgeActivated(boolean activated);
+    boolean isBadgeActivated();
 };
 
 #endif

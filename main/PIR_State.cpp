@@ -3,21 +3,10 @@
 PIR_State::PIR_State()
 {
   this->_detectedSomething = false;
+  this->_isActivated = false;
 }
 
-void PIR_State::vSwitchDetectedSomething()
-{ 
-  if(this->_detectedSomething)
-  {
-    this->_detectedSomething = false;
-  }
-  else
-  {
-    this->_detectedSomething = true;
-  }
-}
-
-void PIR_State::vSetState(boolean detectedSomething)
+void PIR_State::vSetDetectedSomething(boolean detectedSomething)
 {
   this->_detectedSomething = detectedSomething;
 }
@@ -25,4 +14,14 @@ void PIR_State::vSetState(boolean detectedSomething)
 boolean PIR_State::hasDetectedSomething()
 {
   return this->_detectedSomething;
+}
+
+void PIR_State::vSetActivated(boolean activated)
+{
+  this->_isActivated = activated;
+}
+
+boolean PIR_State::isActivated()
+{
+  return this->_isActivated;
 }

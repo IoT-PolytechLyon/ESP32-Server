@@ -8,19 +8,7 @@ LED_State::LED_State()
   this->_blue = 0;
 }
 
-void LED_State::vSwitchState()
-{
-  if(this->_isOn)
-  {
-    this->_isOn = false;
-  }
-  else
-  {
-    this->_isOn = true;
-  }
-}
-
-void LED_State::vSetState(boolean isOn)
+void LED_State::vSetIsOn(boolean isOn)
 {
   this->_isOn = isOn;
 }
@@ -38,6 +26,11 @@ void LED_State::vSetGreen(int green)
 void LED_State::vSetBlue(int blue)
 {
   this->_blue = blue;
+}
+
+boolean LED_State::isOn()
+{
+  return this->_isOn;
 }
 
 int LED_State::getRed()

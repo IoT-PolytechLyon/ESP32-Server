@@ -70,7 +70,7 @@ String HttpServer::dispatcher(String httpRequest)
   if (httpRequest.indexOf("GET /built-in/on") >= 0)
   {
     Serial.println("GET /built-in/on");
-    digitalWrite(13, HIGH);
+    digitalWrite(LED_BUILTIN, HIGH);
     return this->get200() + "{ \"data\": {\"success\": \"BUILT_IN LED was successfuly updated.\"} }";
   }
   /********************** GET /built-in/off **********************/
@@ -78,7 +78,7 @@ String HttpServer::dispatcher(String httpRequest)
   else if (httpRequest.indexOf("GET /built-in/off") >= 0)
   {
     Serial.println("GET /built-in/off");
-    digitalWrite(13, LOW);
+    digitalWrite(LED_BUILTIN, LOW);
     return this->get200() + "{ \"data\": {\"success\": \"BUILT_IN LED was successfuly updated.\"} }";
   }
   /********************** POST /led ****************************/
@@ -86,13 +86,13 @@ String HttpServer::dispatcher(String httpRequest)
   else if (httpRequest.indexOf("POST /led") >= 0)
   {
     Serial.println("POST /led");
-    //Serial.println(httpRequest);
     String httpBody = HttpServer::getHttpBodyFromHttpRequest(httpRequest);
     StaticJsonDocument<256> doc;
     deserializeJson(doc, httpBody);
-    this->_objectData->getLedState()->vSetRed(doc[0]["state"]["led_state"]["red_value"]);
-    this->_objectData->getLedState()->vSetGreen(doc[0]["state"]["led_state"]["green_value"]);
-    this->_objectData->getLedState()->vSetBlue(doc[0]["state"]["led_state"]["blue_value"]);
+    this->_objectData->getLedState()->vSetRed(doc["state"]["led_state"]["red_value"]);
+    this->_objectData->getLedState()->vSetGreen(doc["state"]["led_state"]["green_value"]);
+    this->_objectData->getLedState()->vSetBlue(doc["state"]["led_state"]["blue_value"]);
+    this->vPutStateToNodeExpressServer(); // update state on nodeExpress server
     return this->get200() + "{ \"data\": {\"success\": \"Data were successfuly saved on esp32 side.\"} }";
   }
   /********************** 404 **********************/
@@ -118,10 +118,23 @@ String HttpServer::getHttpBodyFromHttpRequest(String httpRequest)
   return httpRequest.substring(httpRequest.indexOf("\r\n\r\n"), httpRequest.length());
 }
 
-void HttpServer::vPostStateToNodeExpressServer()
+void HttpServer::vPutStateToNodeExpressServer()
 {
-  //todo
+  String jsonState = this->_objectData->toJson();
+  Serial.println("new state PUT to nodeExpress server :");
+  Serial.println(jsonState);
+  HTTPClient http;
+  String url = "http://" + this->_nodeExpressServerIP + ":" + this->_nodeExpressServerPort + "/connected-devices/" + this->_objectData->getId();
+  http.begin(url);
+  http.addHeader("Content-Type", "application/json");
+  int httpResponseCode = http.PUT(jsonState);
+  Serial.print("Server response : ");
+  Serial.println(httpResponseCode);
+
+  http.end();
 }
+
+// TODO : refactor get methods into one ?
 
 ObjectData* HttpServer::getStateFromNodeExpressServer()
 {
@@ -148,4 +161,20 @@ ObjectData* HttpServer::getStateFromNodeExpressServer()
   }
   http.end();
   return objectData;
+}
+
+boolean HttpServer::isBadgeAuthorized(String badge)
+{  
+  HTTPClient http;
+  String url = "http://" + this->_nodeExpressServerIP + ":" + this->_nodeExpressServerPort + "/badges";
+  http.begin(url.c_str());
+  if(http.GET() == 200)
+  {
+    String body = http.getString();
+    if(body.indexOf(badge) >= 0)
+    {
+      return true;
+    }
+  }
+  return false;
 }

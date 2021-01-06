@@ -7,12 +7,14 @@ class PIR_State
 {
   private:
     boolean _detectedSomething;
+    boolean _isActivated;
      
   public:
     PIR_State();
-    void vSwitchDetectedSomething();
-    void vSetState(boolean detectedSomething);
+    void vSetDetectedSomething(boolean detectedSomething);
     boolean hasDetectedSomething();
+    void vSetActivated(boolean activated);
+    boolean isActivated();
 };
 
 #endif

@@ -19,10 +19,12 @@ class ObjectData
   public:
     ObjectData(String fromJson);
     ObjectData();
+    void reset();
     String toJson();
     NFC_State* getNfcState();
     PIR_State* getPirState();
     LED_State* getLedState();
+    const char* getId();
 };
 
 #endif

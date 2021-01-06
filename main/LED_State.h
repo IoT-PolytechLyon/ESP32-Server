@@ -13,11 +13,11 @@ class LED_State
      
   public:
     LED_State();
-    void vSwitchState();
-    void vSetState(boolean isOn);
+    void vSetIsOn(boolean isOn);
     void vSetRed(int red);
     void vSetGreen(int green);
     void vSetBlue(int blue);
+    boolean isOn();
     int getRed();
     int getGreen();
     int getBlue();
