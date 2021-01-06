@@ -1,30 +1,9 @@
-/* NB : 
- * - WIFI credentials are located in the HttpServer.h file. Same goes for the NodeExpress server IP.
- * - NFC Reader must be plugged into UART pin
- * - Motion sensor must be plugged into D4-D5
- * - LED must be plugged into D2-D3
- * - ...
- */
-
-/* libs for main.ino */
-#include <ChainableLED.h> // TODO : refactor into a led manager class ?
+#include "Consts.h"
+#include <ChainableLED.h>
 #include "Arduino.h"
 #include "NfcReader.h"
 #include "HttpServer.h"
 #include "ObjectData.h"
-
-/* consts */ // TODO : put them into a header file.
-#define NFC_READ_DELAY                             1000   // ms
-#define NFC_READ_DELAY_AFTER_BADGING_ATTEMPT       3000   // ms
-#define SERVER_TIMEOUT_TIME                        3000   // ms
-#define PIR_TIMEOUT_TIME                           5000   // ms
-#define PIR_DETECTION_DELAY                        50     // ms
-#define LED_UPDATE_DELAY                           50     // ms
-
-#define MOTION_SENSOR_D4                           15     // pin number
-#define LED_D2                                     14     // pin number
-#define LED_D3                                     32     // pin number
-
 
 /* global vars */
 WiFiServer server(8080); // Server on port 8080. See https://randomnerdtutorials.com/esp32-web-server-arduino-ide/ for more details.
@@ -32,8 +11,7 @@ HttpServer* httpServer = new HttpServer(SERVER_TIMEOUT_TIME);
 ChainableLED leds(LED_D2, LED_D3, 1);
 
 
-// void triggered when movement is detected (interruption)
-void IRAM_ATTR movementDetection()
+void IRAM_ATTR movementDetection() // void triggered when movement is detected (interruption)
 {  
   // when badge is activated and lights are off, we can begin detection. If something is detected, the task pirState will proceed and enable the leds.
   if(httpServer->getObjectState()->getNfcState()->isBadgeActivated() && !httpServer->getObjectState()->getLedState()->isOn())
@@ -57,29 +35,27 @@ void vTaskNfcHandler(void* pvParameters)
     String nfcTag = reader->vReadNfc(nfc);
     if(nfcTag != "")
     {
-      Serial.println(nfcTag);
-      if(!httpServer->getObjectState()->getNfcState()->isBadgeActivated()) // We're in the case the NFC is "unbadged". User will now badge in order to enable the PIR.
+      if (httpServer->isBadgeAuthorized(nfcTag))
       {
-        if (httpServer->isBadgeAuthorized(nfcTag))
+        if(!httpServer->getObjectState()->getNfcState()->isBadgeActivated()) // We're in the case the NFC is "unbadged". User will now badge in order to enable the PIR.
         {
           Serial.println("Badge authorized. Welcome.");
           httpServer->getObjectState()->getNfcState()->vSetBadgeActivated(true);
-          httpServer->vPutStateToNodeExpressServer(); // "nfc_state" has its property "is_activated" true from now. It is sent to server.
           httpServer->getObjectState()->getPirState()->vSetActivated(true);
+          httpServer->vPutStateToNodeExpressServer(); // "nfc_state" has its property "is_activated" true from now. It is sent to the server.
         }
-        else
+        else if(httpServer->getObjectState()->getNfcState()->isBadgeActivated()) // We're in the case the NFC is "badged". PIR is enabled and LEDs may be enabled too.
         {
-          Serial.println("Badge unauthorized.");
+          Serial.println("Badge authorized. Good bye !");
+          httpServer->getObjectState()->reset(); // reset state of all booleans values (nfc, pir & leds)
+          leds.setColorRGB(0, 0, 0, 0); // turn off the led
+          httpServer->vPutStateToNodeExpressServer();
         }
         delay(NFC_READ_DELAY_AFTER_BADGING_ATTEMPT); // avoids "double badging" with a longer delay.
       }
-      else if(httpServer->getObjectState()->getNfcState()->isBadgeActivated()) // We're in the case the NFC is "badged". PIR is enabled and LEDs may be enabled too.
+      else
       {
-        Serial.println("Badge authorized. Good bye !");
-        httpServer->getObjectState()->reset(); // reset state of all booleans values (nfc, pir & leds)
-        leds.setColorRGB(0, 0, 0, 0); // turn off the led
-        httpServer->vPutStateToNodeExpressServer();
-        delay(NFC_READ_DELAY_AFTER_BADGING_ATTEMPT);
+        Serial.println("Badge unauthorized.");
       }
     }
     delay(NFC_READ_DELAY);
