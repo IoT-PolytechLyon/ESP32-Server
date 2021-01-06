@@ -1,7 +1,8 @@
-#include "Consts.h"
 #include <ChainableLED.h>
+#include "Consts.h"
 #include "Arduino.h"
-#include "NfcReader.h"
+#include "NFC_Handler.h"
+#include <PN532/PN532_HSU/PN532_HSU.h>
 #include "HttpServer.h"
 #include "ObjectData.h"
 
@@ -26,39 +27,14 @@ void IRAM_ATTR movementDetection() // void triggered when movement is detected (
 // If a NFC badge is recognized once again, it will shut down the LEDs & PIR and will save the new state on nodeExpress server side.
 void vTaskNfcHandler(void* pvParameters)
 {
-  NfcReader* reader = new NfcReader();
+  NFC_Handler* reader = new NFC_Handler();
   PN532_HSU pn532hsu(Serial1);
   NfcAdapter nfc(pn532hsu);
   nfc.begin();
   for(;;)
   {
     String nfcTag = reader->vReadNfc(nfc);
-    if(nfcTag != "")
-    {
-      if (httpServer->isBadgeAuthorized(nfcTag))
-      {
-        if(!httpServer->getObjectState()->getNfcState()->isBadgeActivated()) // We're in the case the NFC is "unbadged". User will now badge in order to enable the PIR.
-        {
-          Serial.println("Badge authorized. Welcome.");
-          httpServer->getObjectState()->getNfcState()->vSetBadgeActivated(true);
-          httpServer->getObjectState()->getPirState()->vSetActivated(true);
-          httpServer->vPutStateToNodeExpressServer(); // "nfc_state" has its property "is_activated" true from now. It is sent to the server.
-        }
-        else if(httpServer->getObjectState()->getNfcState()->isBadgeActivated()) // We're in the case the NFC is "badged". PIR is enabled and LEDs may be enabled too.
-        {
-          Serial.println("Badge authorized. Good bye !");
-          httpServer->getObjectState()->reset(); // reset state of all booleans values (nfc, pir & leds)
-          leds.setColorRGB(0, 0, 0, 0); // turn off the led
-          httpServer->vPutStateToNodeExpressServer();
-        }
-        delay(NFC_READ_DELAY_AFTER_BADGING_ATTEMPT); // avoids "double badging" with a longer delay.
-      }
-      else
-      {
-        Serial.println("Badge unauthorized.");
-      }
-    }
-    delay(NFC_READ_DELAY);
+    reader->handleBadging(nfcTag, httpServer, leds);
   }
 }
 /********************************** PIR Task *******************************************/

@@ -6,8 +6,6 @@
  * - ...
  */
 
-
-/* consts */ // TODO : put them into a header file.
 #define NFC_READ_DELAY                             1000   // ms
 #define NFC_READ_DELAY_AFTER_BADGING_ATTEMPT       3000   // ms
 #define SERVER_TIMEOUT_TIME                        3000   // ms
