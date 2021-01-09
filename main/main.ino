@@ -98,11 +98,11 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(MOTION_SENSOR_D4), movementDetection, RISING); // attaches the movementDetection method to the MOTION_SENSOR pin.
  
   // JOB 1 : Starts NFC Reading.
-  xTaskCreate(vTaskNfcHandler, "vTaskNfcHandler", 3500, NULL, 5, NULL);
+  xTaskCreate(vTaskNfcHandler, "vTaskNfcHandler", 4000, NULL, 5, NULL);
   // JOB 2 : Starts the PIR sensor task
-  xTaskCreate(vTaskPirSensorHandler, "vTaskPirSensorHandler", 3500, NULL, 5, NULL);
+  xTaskCreate(vTaskPirSensorHandler, "vTaskPirSensorHandler", 4000, NULL, 5, NULL);
   // JOB 3 : Starts the LEDs task
-  xTaskCreate(vTaskLedsHandler, "vTaskLedsHandler", 1000, NULL, 1, NULL);
+  xTaskCreate(vTaskLedsHandler, "vTaskLedsHandler", 1500, NULL, 1, NULL);
   // JOB 4 : Starts the Http Server so that incoming HTTP requests can be processed.
   xTaskCreate(vTaskIncomingConnectionsHandler, "vTaskIncomingConnectionsHandler", 5000, NULL, 7, NULL);
 }

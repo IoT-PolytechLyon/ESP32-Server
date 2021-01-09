@@ -92,7 +92,6 @@ String HttpServer::dispatcher(String httpRequest)
     this->_objectData->getLedState()->vSetRed(doc["state"]["led_state"]["red_value"]);
     this->_objectData->getLedState()->vSetGreen(doc["state"]["led_state"]["green_value"]);
     this->_objectData->getLedState()->vSetBlue(doc["state"]["led_state"]["blue_value"]);
-    this->vPutStateToNodeExpressServer(); // update state on nodeExpress server
     return this->get200() + "{ \"data\": {\"success\": \"Data were successfuly saved on esp32 side.\"} }";
   }
   /********************** 404 **********************/
@@ -141,6 +140,7 @@ ObjectData* HttpServer::getStateFromNodeExpressServer()
   ObjectData* objectData;
   HTTPClient http;
   String url = "http://" + this->_nodeExpressServerIP + ":" + this->_nodeExpressServerPort + "/connected-devices/by-name/esp32-IoT-2a";
+  Serial.println(url);
   http.begin(url.c_str());
   if(http.GET() == 200)
   {
@@ -148,7 +148,6 @@ ObjectData* HttpServer::getStateFromNodeExpressServer()
     Serial.println("actual server state :");
     Serial.println(body);
     objectData = new ObjectData(body);
-
   }
   else
   {

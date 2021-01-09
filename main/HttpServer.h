@@ -11,10 +11,10 @@ class HttpServer
 {
   private:
     // wifi credentials
-    const char*   _ssid = "D.";
-    const char*   _password = "p1805134@jessy63";
+    const char*   _ssid = "Cocoon";
+    const char*   _password = "myriam&dorian<3";
     
-    const String  _nodeExpressServerIP = "192.168.43.192";
+    const String  _nodeExpressServerIP = "192.168.0.55";
     const String  _nodeExpressServerPort = "8081";
     
     ObjectData*   _objectData;
