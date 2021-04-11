@@ -13,9 +13,12 @@ Arduino & C++ Code in order to handle a LED, NFC reader & PIR motion Sensor
 
 ![image](https://user-images.githubusercontent.com/31795527/114323644-6cb81d00-9b26-11eb-90af-6991911b02eb.png)
 
-
 # Demonstration videos (french)
 
-https://www.youtube.com/watch?v=3qnKhdDAtUE
+[Global presentation video (french. You can try youtube subtitles if needed.](https://www.youtube.com/watch?v=3qnKhdDAtUE)
 
-https://www.youtube.com/watch?v=WWNtsDXCYrM
+[Mobile App Video (french. You can try youtube subtitles if needed.)](https://www.youtube.com/watch?v=WWNtsDXCYrM)
+
+# Mobile App
+
+over here : https://github.com/IoT-PolytechLyon/Mobile-Application
